@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+	<!-- 配置文件 -->
+	<context:property-placeholder location="conf.properties" ignore-unresolvable="true" />
+
+	<!-- Zookeeper Lock -->
+	<!-- 失败重试策略 -->
+	<bean id="retryPolicy" class="org.apache.curator.retry.ExponentialBackoffRetry">
+		<constructor-arg name="baseSleepTimeMs" value="1000"></constructor-arg>
+		<constructor-arg name="maxRetries" value="3"></constructor-arg>
+	</bean>
+	<!-- 工厂方式创建 -->
+	<bean id="curatorClient" class="org.apache.curator.framework.CuratorFrameworkFactory" factory-method="newClient">
+		<constructor-arg name="connectString" value="127.0.0.1:2181"></constructor-arg>
+		<constructor-arg name="sessionTimeoutMs" value="#{10000}"></constructor-arg>
+		<constructor-arg name="connectionTimeoutMs" value="#{10000}"></constructor-arg>
+		<constructor-arg name="retryPolicy" ref="retryPolicy"></constructor-arg>
+	</bean>
+	<bean id="zookeeperLock" class="com.lock.impl.ZookeeperLock">
+		<property name="client" ref="curatorClient"></property>
+		<property name="lockDir" value="/curator/lock"></property>
+	</bean>
+
+</beans>
