@@ -22,7 +22,7 @@
 		<constructor-arg name="connectionTimeoutMs" value="#{10000}"></constructor-arg>
 		<constructor-arg name="retryPolicy" ref="retryPolicy"></constructor-arg>
 	</bean>
-	<bean id="zookeeperLock" class="com.lock.impl.ZookeeperLock">
+	<bean id="zookeeperLock" class="com.lock.impl.ZookeeperLock" init-method="init" destroy-method="destory">
 		<property name="client" ref="curatorClient"></property>
 		<property name="lockDir" value="/curator/lock"></property>
 	</bean>

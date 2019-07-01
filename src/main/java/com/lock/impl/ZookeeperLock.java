@@ -3,7 +3,6 @@ package com.lock.impl;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +30,23 @@ public class ZookeeperLock implements Lock {
 	private InterProcessMutex mutex;
 
 	/**
+	 * 初始化
+	 */
+	public void init() {
+		if (client == null) {
+			throw new RuntimeException("client must not be null");
+		}
+		client.start();// 开启客户端
+		if (mutex == null) {
+			mutex = new InterProcessMutex(client, lockDir);
+		}
+	}
+
+	/**
 	 * 获取锁
 	 */
 	public boolean acquire() {
 		try {
-			if (client == null) {
-				throw new RuntimeException("client can not be null");
-			}
-			if (mutex == null) {
-				client.start();// 开启会话
-				mutex = new InterProcessMutex(client, lockDir);
-			}
-
 			// 获取锁
 			mutex.acquire();
 			return true;
@@ -58,14 +62,6 @@ public class ZookeeperLock implements Lock {
 	 */
 	public boolean acquire(long time, TimeUnit unit) {
 		try {
-			if (client == null) {
-				throw new RuntimeException("client can not be null");
-			}
-			if (mutex == null) {
-				client.start();// 开启会话
-				mutex = new InterProcessMutex(client, lockDir);
-			}
-
 			// 获取锁
 			return mutex.acquire(time, unit);
 		} catch (Exception e) {
@@ -79,27 +75,23 @@ public class ZookeeperLock implements Lock {
 	 */
 	public boolean release() {
 		try {
-			if (client == null) {
-				throw new RuntimeException("client can not be null");
-			}
-			if (mutex == null) {
-				throw new RuntimeException("mutex can not be null");
-			}
-			if (client.getState() != CuratorFrameworkState.STARTED) {
-				throw new RuntimeException("client can not be stopped");
-			}
-
+			// 释放锁
 			mutex.release();
 			return true;
 		} catch (Exception e) {
 			logger.error("Exception", e);
-		} finally {
-			if (client != null) {// 关闭会话
-				client.close();
-			}
 		}
 
 		return false;
+	}
+
+	/*
+	 * 资源释放
+	 */
+	public void destory() {
+		if (client != null) {
+			client.close();
+		}
 	}
 
 	public CuratorFramework getClient() {

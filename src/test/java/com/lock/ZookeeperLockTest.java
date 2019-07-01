@@ -1,13 +1,10 @@
 package com.lock;
 
-import static org.junit.Assert.*;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +30,7 @@ public class ZookeeperLockTest {
 		final CountDownLatch slatch = new CountDownLatch(1);
 		final CountDownLatch latch = new CountDownLatch(5);
 		ExecutorService exec = Executors.newCachedThreadPool();
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 100; i++) {
 			exec.submit(new Runnable() {
 				public void run() {
 					try {
@@ -42,26 +39,15 @@ public class ZookeeperLockTest {
 						logger.error("Exception", e1);
 					}
 
-					CuratorFramework client = lock.getClient();
-					client.start();
-					InterProcessMutex mutex = new InterProcessMutex(client, "/lock");
-
 					try {
-						mutex.acquire();
+						lock.acquire();
+						logger.info("{}获取到锁", Thread.currentThread().getName());
 					} catch (Exception e1) {
 						logger.error("Exception", e1);
-					}
-
-					System.out.println(Thread.currentThread().getName() + "获取到锁");
-					try {
-						latch.countDown();
-						System.out.println(Thread.currentThread().getName() + "已释放");
-					} catch (Exception e) {
-						logger.error("Exception", e);
 					} finally {
 						try {
-							mutex.release();
-							client.close();
+							lock.release();
+							logger.info("{}已释放", Thread.currentThread().getName());
 						} catch (Exception e) {
 							logger.error("Exception", e);
 						}
