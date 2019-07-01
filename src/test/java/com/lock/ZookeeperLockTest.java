@@ -27,10 +27,11 @@ public class ZookeeperLockTest {
 
 	@Test
 	public void test1() throws Exception {
+		int size = 100;
 		final CountDownLatch slatch = new CountDownLatch(1);
-		final CountDownLatch latch = new CountDownLatch(5);
+		final CountDownLatch latch = new CountDownLatch(size);
 		ExecutorService exec = Executors.newCachedThreadPool();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < size; i++) {
 			exec.submit(new Runnable() {
 				public void run() {
 					try {
@@ -42,12 +43,14 @@ public class ZookeeperLockTest {
 					try {
 						lock.acquire();
 						logger.info("{}获取到锁", Thread.currentThread().getName());
+						Thread.sleep(1000);
 					} catch (Exception e1) {
 						logger.error("Exception", e1);
 					} finally {
 						try {
 							lock.release();
 							logger.info("{}已释放", Thread.currentThread().getName());
+							latch.countDown();
 						} catch (Exception e) {
 							logger.error("Exception", e);
 						}
@@ -57,11 +60,7 @@ public class ZookeeperLockTest {
 		}
 
 		slatch.countDown();
-		try {
-			latch.await();
-		} catch (Exception e) {
-			logger.error("Exception", e);
-		}
+		latch.await();
 		exec.shutdown();
 	}
 
