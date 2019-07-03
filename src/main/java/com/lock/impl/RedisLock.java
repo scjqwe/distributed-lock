@@ -1,5 +1,6 @@
 package com.lock.impl;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataAccessException;
@@ -21,8 +22,10 @@ public class RedisLock implements Lock {
 
 	private RedisTemplate<String, String> redisTemplate;
 
+	private static final String PREFIX = "redis-lock:";
+
 	/** 默认锁键 */
-	private String lKey = "lock";
+	private String lKey = PREFIX + UUID.randomUUID().toString();
 
 	/** 默认锁值 */
 	private String lValue = "1";
@@ -79,7 +82,7 @@ public class RedisLock implements Lock {
 	}
 
 	public void setlKey(String lKey) {
-		this.lKey = lKey;
+		this.lKey = PREFIX + lKey;
 	}
 
 	public String getlValue() {

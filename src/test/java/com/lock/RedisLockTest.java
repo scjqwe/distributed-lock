@@ -25,6 +25,7 @@ public class RedisLockTest {
 
 	private RedisLock lock = ContextHolder.context.getBean(RedisLock.class);
 
+	@SuppressWarnings("unchecked")
 	private RedisTemplate<String, Object> redisTemplate = ContextHolder.context.getBean(RedisTemplate.class);
 
 	@Test

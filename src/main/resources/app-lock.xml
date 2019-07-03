@@ -31,8 +31,6 @@
 	<!-- Redis Lock -->
 	<bean id="redisLock" class="com.lock.impl.RedisLock">
 		<property name="redisTemplate" ref="redisTemplate"></property>
-		<property name="lKey" value="redis-lock"></property>
-		<property name="lValue" value="1"></property>
 	</bean>
 
 </beans>
