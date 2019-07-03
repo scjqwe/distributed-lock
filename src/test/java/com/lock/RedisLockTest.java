@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.ContextHolder;
 import com.lock.impl.RedisLock;
@@ -23,6 +24,8 @@ public class RedisLockTest {
 	private static final Logger logger = LoggerFactory.getLogger(RedisLockTest.class);
 
 	private RedisLock lock = ContextHolder.context.getBean(RedisLock.class);
+
+	private RedisTemplate<String, Object> redisTemplate = ContextHolder.context.getBean(RedisTemplate.class);
 
 	@Test
 	public void test1() throws Exception {
@@ -43,7 +46,6 @@ public class RedisLockTest {
 						while (!lock.acquire()) {
 						}
 						logger.info("{}获取到锁", Thread.currentThread().getName());
-						Thread.sleep(1000);
 					} catch (Exception e1) {
 						logger.error("Exception", e1);
 					} finally {
@@ -62,5 +64,10 @@ public class RedisLockTest {
 		slatch.countDown();
 		latch.await();
 		exec.shutdown();
+	}
+
+	@Test
+	public void test2() throws Exception {
+		logger.info("{}", redisTemplate.opsForValue().get("a"));
 	}
 }
