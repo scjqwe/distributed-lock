@@ -30,6 +30,9 @@ public class RedisLock implements Lock {
 	/** 默认锁值 */
 	private String lValue = "1";
 
+	/**
+	 * 获取锁
+	 */
 	public boolean acquire() {
 		return (Boolean) redisTemplate.execute(new RedisCallback<Object>() {
 			public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
@@ -40,33 +43,30 @@ public class RedisLock implements Lock {
 		});
 	}
 
+	/**
+	 * 获取锁
+	 * 
+	 * @param time
+	 *            持有时间
+	 * @param unit
+	 *            时间单位
+	 */
 	public boolean acquire(long time, TimeUnit unit) {
 		final long exp = unit.toSeconds(time);
 		return (Boolean) redisTemplate.execute(new RedisCallback<Object>() {
 			public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
 				byte[] serializeKey = redisTemplate.getStringSerializer().serialize(lKey);
 				byte[] serializeValue = redisTemplate.getStringSerializer().serialize(String.valueOf(lValue));
-				Boolean acquire = connection.setNX(serializeKey, serializeValue);
-				// 如果设值成功,则设置过期时间
-				if (acquire) {
-					connection.expire(serializeKey, exp);
-				}
-				return acquire;
+				return connection.setEx(serializeKey, exp, serializeValue);
 			}
 		});
 	}
 
+	/**
+	 * 释放锁
+	 */
 	public boolean release() {
-		return (Boolean) redisTemplate.execute(new RedisCallback<Object>() {
-			public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
-				byte[] serializeKey = redisTemplate.getStringSerializer().serialize(lKey);
-				if (connection.exists(serializeKey)) {
-					connection.del(serializeKey);
-					return true;
-				}
-				return false;
-			}
-		});
+		return redisTemplate.delete(lKey);
 	}
 
 	public RedisTemplate<String, String> getRedisTemplate() {
