@@ -3,9 +3,6 @@ package com.lock.impl;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.lock.Lock;
@@ -34,13 +31,7 @@ public class RedisLock implements Lock {
 	 * 获取锁
 	 */
 	public boolean acquire() {
-		return (Boolean) redisTemplate.execute(new RedisCallback<Object>() {
-			public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
-				byte[] serializeKey = redisTemplate.getStringSerializer().serialize(lKey);
-				byte[] serializeValue = redisTemplate.getStringSerializer().serialize(String.valueOf(lValue));
-				return connection.setNX(serializeKey, serializeValue);
-			}
-		});
+		return redisTemplate.opsForValue().setIfAbsent(lKey, lValue);
 	}
 
 	/**
@@ -52,14 +43,7 @@ public class RedisLock implements Lock {
 	 *            时间单位
 	 */
 	public boolean acquire(long time, TimeUnit unit) {
-		final long exp = unit.toSeconds(time);
-		return (Boolean) redisTemplate.execute(new RedisCallback<Object>() {
-			public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
-				byte[] serializeKey = redisTemplate.getStringSerializer().serialize(lKey);
-				byte[] serializeValue = redisTemplate.getStringSerializer().serialize(String.valueOf(lValue));
-				return connection.setEx(serializeKey, exp, serializeValue);
-			}
-		});
+		return redisTemplate.opsForValue().setIfAbsent(lKey, lValue, time, unit);
 	}
 
 	/**
